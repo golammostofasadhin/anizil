@@ -1,0 +1,404 @@
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
+const { body, validationResult } = require('express-validator');
+const { getPool } = require('../config/database');
+const auth = require('../middleware/auth');
+const { generateToken } = require('../utils/helpers');
+
+const router = express.Router();
+
+// Google OAuth Strategy
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID || '',
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/api/auth/google/callback',
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const pool = await getPool();
+    const email = profile.emails?.[0]?.value || `${profile.id}@google.user`;
+    const name = profile.displayName || profile.username || 'Google User';
+    const avatar = profile.photos?.[0]?.value || null;
+
+    const [existing] = await pool.query(
+      'SELECT * FROM users WHERE (email = ? OR google_id = ?)',
+      [email, profile.id]
+    );
+
+    if (existing.length > 0) {
+      const user = existing[0];
+      if (user.google_id !== profile.id) {
+        await pool.query('UPDATE users SET google_id = ?, avatar = COALESCE(?, avatar) WHERE id = ?', [profile.id, avatar, user.id]);
+      }
+      return done(null, user);
+    }
+
+    const referralCode = generateToken().substring(0, 8).toUpperCase();
+    const [result] = await pool.query(
+      'INSERT INTO users (name, email, avatar, google_id, referral_code) VALUES (?, ?, ?, ?, ?)',
+      [name, email, avatar, profile.id, referralCode]
+    );
+
+    const [newUser] = await pool.query('SELECT * FROM users WHERE id = ?', [result.insertId]);
+
+    await pool.query(
+      'INSERT INTO activity_feed (user_id, action, details) VALUES (?, ?, ?)',
+      [result.insertId, 'register', `${name} joined via Google`]
+    );
+
+    return done(null, newUser[0]);
+  } catch (err) {
+    return done(err, null);
+  }
+}));
+
+// Google OAuth routes
+router.get('/google',
+  (req, res, next) => {
+    passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+  }
+);
+
+router.get('/google/callback',
+  (req, res, next) => {
+    passport.authenticate('google', { session: false, failureRedirect: '/login' }, async (err, user) => {
+      if (err || !user) {
+        return res.redirect(`${process.env.CORS_ORIGIN || 'http://localhost:5173'}/login?error=google_auth_failed`);
+      }
+
+      try {
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+          expiresIn: process.env.JWT_EXPIRE || '7d'
+        });
+
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        const redirectUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/dashboard?token=${token}`;
+        res.redirect(redirectUrl);
+      } catch (err) {
+        res.redirect(`${process.env.CORS_ORIGIN || 'http://localhost:5173'}/login?error=server_error`);
+      }
+    })(req, res, next);
+  }
+);
+
+router.post('/register', [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], async (req, res) => {
+  try {
+    const pool = await getPool();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { name, email, password } = req.body;
+
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered'
+      });
+    }
+
+    const [settings] = await pool.query('SELECT setting_value FROM settings WHERE setting_key = ?', ['registration_enabled']);
+    if (settings.length > 0 && settings[0].setting_value === '0') {
+      return res.status(403).json({
+        success: false,
+        message: 'Registration is currently disabled'
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const referralCode = generateToken().substring(0, 8).toUpperCase();
+
+    const [result] = await pool.query(
+      'INSERT INTO users (name, email, password, referral_code) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, referralCode]
+    );
+
+    const token = jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE || '7d'
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    const [newUser] = await pool.query(
+      'SELECT id, name, email, avatar, role, xp, level, created_at FROM users WHERE id = ?',
+      [result.insertId]
+    );
+
+    await pool.query(
+      'INSERT INTO activity_feed (user_id, action, details) VALUES (?, ?, ?)',
+      [result.insertId, 'register', `${name} joined Anizil`]
+    );
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: newUser[0],
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during registration'
+    });
+  }
+});
+
+router.post('/login', [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required')
+], async (req, res) => {
+  try {
+    const pool = await getPool();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { email, password } = req.body;
+
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    const user = users[0];
+
+    if (user.is_banned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account is banned. Please contact support.'
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE || '7d'
+    });
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    await pool.query(
+      'INSERT INTO activity_feed (user_id, action, details) VALUES (?, ?, ?)',
+      [user.id, 'login', `${user.name} logged in`]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          role: user.role,
+          xp: user.xp,
+          level: user.level,
+          premium_until: user.premium_until,
+          created_at: user.created_at
+        },
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during login'
+    });
+  }
+});
+
+router.post('/logout', (req, res) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0)
+  });
+
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
+router.get('/me', auth, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const [watchlistCount] = await pool.query(
+      'SELECT COUNT(*) as count FROM watchlists WHERE user_id = ?',
+      [req.user.id]
+    );
+
+    const [historyCount] = await pool.query(
+      'SELECT COUNT(*) as count FROM watch_history WHERE user_id = ?',
+      [req.user.id]
+    );
+
+    const [achievementCount] = await pool.query(
+      'SELECT COUNT(*) as count FROM user_achievements WHERE user_id = ?',
+      [req.user.id]
+    );
+
+    const [unreadNotifications] = await pool.query(
+      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0',
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...req.user,
+        stats: {
+          watchlist: watchlistCount[0].count,
+          watched: historyCount[0].count,
+          achievements: achievementCount[0].count,
+          unread_notifications: unreadNotifications[0].count
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get me error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Valid email is required')
+], async (req, res) => {
+  try {
+    const pool = await getPool();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { email } = req.body;
+
+    const [users] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (users.length === 0) {
+      return res.json({
+        success: true,
+        message: 'If the email exists, a reset link has been sent'
+      });
+    }
+
+    const resetToken = generateToken();
+    const resetExpiry = new Date(Date.now() + 3600000);
+
+    await pool.query(
+      'UPDATE users SET referral_code = ? WHERE id = ?',
+      [resetToken, users[0].id]
+    );
+
+    res.json({
+      success: true,
+      message: 'If the email exists, a reset link has been sent',
+      data: {
+        reset_token: resetToken
+      }
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], async (req, res) => {
+  try {
+    const pool = await getPool();
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation errors',
+        errors: errors.array()
+      });
+    }
+
+    const { token, password } = req.body;
+
+    const [users] = await pool.query('SELECT id FROM users WHERE referral_code = ?', [token]);
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, users[0].id]);
+
+    res.json({
+      success: true,
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+module.exports = router;
