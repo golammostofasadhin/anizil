@@ -1,8 +1,12 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Star, Crown } from 'lucide-react';
+import useSettingsStore from '../../store/settingsStore';
 
 export default function AnimeCard({ anime }) {
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
+  useEffect(() => { if (!fetched) fetchSettings(); }, []);
   const {
     title,
     slug,
@@ -58,7 +62,7 @@ export default function AnimeCard({ anime }) {
           )}
 
           {/* Premium crown badge */}
-          {is_premium ? (
+          {is_premium && premiumEnabled ? (
             <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-yellow-500/20 backdrop-blur-sm flex items-center gap-1">
               <Crown className="w-3.5 h-3.5 text-yellow-400" />
               <span className="text-[10px] font-bold text-yellow-400">PREMIUM</span>

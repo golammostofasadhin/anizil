@@ -6,6 +6,7 @@ import {
   Frame, Shield, Award, Sparkles,
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
+import useSettingsStore from '../store/settingsStore';
 import Skeleton from '../components/common/Skeleton';
 import { cn, formatNumber } from '../lib/utils';
 import api from '../lib/api';
@@ -30,6 +31,7 @@ const XP_METHODS = [
 
 export default function ShopPage() {
   const { user, isAuthenticated } = useAuthStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
   const [purchaseMsg, setPurchaseMsg] = useState('');
@@ -39,6 +41,7 @@ export default function ShopPage() {
 
   useEffect(() => {
     loadFrames();
+    if (!fetched) fetchSettings();
     setLoading(false);
   }, [isAuthenticated]);
 
@@ -256,7 +259,7 @@ export default function ShopPage() {
           )}
         </section>
 
-        {/* Premium Plans */}
+        {premiumEnabled && (
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-[#f8fafc] mb-6 flex items-center gap-2">
             <Crown className="w-6 h-6 text-yellow-400" /> Premium Plans
@@ -313,6 +316,7 @@ export default function ShopPage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Redeem Code */}
         <section className="mb-12">

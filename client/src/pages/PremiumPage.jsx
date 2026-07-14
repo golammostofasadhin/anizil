@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crown, Check, X, ChevronDown, Zap, Play, Lock, Star, Shield, Headphones,
 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
+import useSettingsStore from '../store/settingsStore';
 import { cn, formatNumber } from '../lib/utils';
 
 const fadeIn = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -61,7 +62,27 @@ const BENEFITS = [
 
 export default function PremiumPage() {
   const { user, isAuthenticated } = useAuthStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const [openFaq, setOpenFaq] = useState(null);
+
+  useEffect(() => { if (!fetched) fetchSettings(); }, []);
+
+  if (fetched && !premiumEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center px-4">
+          <Crown className="w-16 h-16 text-[#94a3b8] mx-auto mb-4 opacity-50" />
+          <h1 className="text-3xl font-bold text-[#f8fafc] mb-2">Premium Unavailable</h1>
+          <p className="text-[#94a3b8] mb-6 max-w-md mx-auto">
+            The premium system is currently disabled by the site administrator.
+          </p>
+          <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white rounded-lg font-semibold transition-all">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

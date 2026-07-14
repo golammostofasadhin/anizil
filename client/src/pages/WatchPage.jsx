@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Play, MessageSquare, Info, Keyboard, List, Crown, Coins, Loader2, Lock } from 'lucide-react';
 import useAnimeStore from '../store/animeStore';
 import useAuthStore from '../store/authStore';
+import useSettingsStore from '../store/settingsStore';
 import Skeleton from '../components/common/Skeleton';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -12,6 +13,7 @@ export default function WatchPage() {
   const { animeSlug, episodeNumber } = useParams();
   const navigate = useNavigate();
   const { currentAnime, episodes, fetchAnimeBySlug, fetchEpisodes, loadingCurrentAnime } = useAnimeStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const { isAuthenticated } = useAuthStore();
 
   const [server, setServer] = useState('sub');
@@ -26,6 +28,7 @@ export default function WatchPage() {
 
   useEffect(() => {
     fetchAnimeBySlug(animeSlug);
+    if (!fetched) fetchSettings();
   }, [animeSlug]);
 
   useEffect(() => {
@@ -218,7 +221,7 @@ export default function WatchPage() {
     );
   }
 
-  const isPremiumLocked = currentAnime.is_premium && !hasPremiumAccess;
+  const isPremiumLocked = premiumEnabled && currentAnime.is_premium && !hasPremiumAccess;
 
   return (
     <div className="min-h-screen bg-[#0f172a]">

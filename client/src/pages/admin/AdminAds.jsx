@@ -30,12 +30,12 @@ export default function AdminAds() {
         const res = await api.get('/admin/settings/ads');
         const d = res.data?.data || res.data;
         reset({
-          enabled: d.enabled ?? false,
-          publisherTagId: d.publisherTagId || '',
-          zoneHomepage: d.zoneHomepage || '',
-          zoneBelowPlayer: d.zoneBelowPlayer || '',
-          zoneSidebar: d.zoneSidebar || '',
-          zoneStickyBottom: d.zoneStickyBottom || '',
+          enabled: d.ad_enabled ?? d.enabled ?? false,
+          publisherTagId: d.ad_publisherTagId || d.publisherTagId || '',
+          zoneHomepage: d.ad_zoneHomepage || d.zoneHomepage || '',
+          zoneBelowPlayer: d.ad_zoneBelowPlayer || d.zoneBelowPlayer || '',
+          zoneSidebar: d.ad_zoneSidebar || d.zoneSidebar || '',
+          zoneStickyBottom: d.ad_zoneStickyBottom || d.zoneStickyBottom || '',
         });
       } catch (err) {
         console.error(err);

@@ -239,10 +239,15 @@ router.post('/frames/activate', auth, async (req, res) => {
 // Purchase premium anime with XP
 router.post('/purchase-anime', auth, async (req, res) => {
   try {
+    const pool = await getPool();
+    const [premiumSetting] = await pool.query('SELECT setting_value FROM settings WHERE setting_key = ?', ['premium_enabled']);
+    if (premiumSetting.length > 0 && premiumSetting[0].setting_value === '0') {
+      return res.status(400).json({ success: false, message: 'Premium system is disabled' });
+    }
+
     const { anime_id } = req.body;
     if (!anime_id) return res.status(400).json({ success: false, message: 'anime_id is required' });
 
-    const pool = await getPool();
     const [animes] = await pool.query('SELECT * FROM anime WHERE id = ? AND is_premium = 1', [anime_id]);
     if (animes.length === 0) return res.status(400).json({ success: false, message: 'Anime not found or not premium' });
 
@@ -275,6 +280,12 @@ router.post('/purchase-anime', auth, async (req, res) => {
 router.get('/anime-access/:animeId', auth, async (req, res) => {
   try {
     const pool = await getPool();
+
+    const [premiumSetting] = await pool.query('SELECT setting_value FROM settings WHERE setting_key = ?', ['premium_enabled']);
+    if (premiumSetting.length > 0 && premiumSetting[0].setting_value === '0') {
+      return res.json({ success: true, data: { has_access: true } });
+    }
+
     const animeId = req.params.animeId;
 
     if (req.user.role === 'super_admin' || req.user.role === 'content_admin') {

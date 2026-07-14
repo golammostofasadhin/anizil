@@ -15,14 +15,14 @@ import {
   Shield,
 } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import useSettingsStore from '../../store/settingsStore';
 
-const navLinks = [
+const baseLinks = [
   { label: 'Home', path: '/' },
   { label: 'Genre', path: '/genres' },
   { label: 'Schedule', path: '/schedule' },
   { label: 'Forum', path: '/forum' },
   { label: 'Shop', path: '/shop' },
-  { label: 'Premium', path: '/premium' },
 ];
 
 export default function Navbar() {
@@ -33,7 +33,16 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const isLoggedIn = isAuthenticated && user;
+
+  useEffect(() => {
+    if (!fetched) fetchSettings();
+  }, []);
+
+  const navLinks = fetched && !premiumEnabled
+    ? baseLinks
+    : [...baseLinks, { label: 'Premium', path: '/premium' }];
 
   const isAdmin = user && ['super_admin', 'content_admin', 'moderator'].includes(user.role);
 

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import useAnimeStore from '../store/animeStore';
 import useAuthStore from '../store/authStore';
+import useSettingsStore from '../store/settingsStore';
 import AnimeCard from '../components/common/AnimeCard';
 import Skeleton from '../components/common/Skeleton';
 import GenreTag from '../components/common/GenreTag';
@@ -27,6 +28,7 @@ export default function AnimeDetailPage() {
     fetchAnimeBySlug, fetchEpisodes, clearCurrentAnime,
   } = useAnimeStore();
   const { user, isAuthenticated } = useAuthStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const isAdmin = user && ['super_admin', 'content_admin', 'moderator'].includes(user.role);
 
   const [episodeView, setEpisodeView] = useState('grid');
@@ -42,6 +44,7 @@ export default function AnimeDetailPage() {
 
   useEffect(() => {
     fetchAnimeBySlug(slug);
+    if (!fetched) fetchSettings();
     return () => clearCurrentAnime();
   }, [slug]);
 
@@ -152,6 +155,7 @@ export default function AnimeDetailPage() {
   };
 
   const isPremiumLocked = (epNum) => {
+    if (!premiumEnabled) return false;
     if (user?.role === 'super_admin' || user?.role === 'content_admin') return false;
     if (user?.premium_until && new Date(user.premium_until) > new Date()) return false;
     if (anime?.is_premium && hasPremiumAccess) return false;
@@ -245,7 +249,7 @@ export default function AnimeDetailPage() {
                   <span className={cn('px-3 py-1 rounded-full text-sm font-medium border', getStatusColor(anime.status))}>
                     {anime.status}
                   </span>
-                  {anime.is_premium ? (
+                  {anime.is_premium && premiumEnabled ? (
                     <span className="px-3 py-1 rounded-full text-sm font-medium border bg-yellow-500/15 text-yellow-400 border-yellow-500/30 flex items-center gap-1">
                       <Crown className="w-3.5 h-3.5" /> Premium
                     </span>
@@ -487,7 +491,7 @@ export default function AnimeDetailPage() {
             className="space-y-4"
           >
             <motion.div variants={fadeIn} className="bg-[#1e293b] border border-[rgba(148,163,184,0.12)] rounded-xl p-5 space-y-4 sticky top-24">
-              {anime.is_premium && !hasPremiumAccess ? (
+              {anime.is_premium && premiumEnabled && !hasPremiumAccess ? (
                 <button
                   onClick={handlePurchaseAnime}
                   disabled={purchasingAnime}

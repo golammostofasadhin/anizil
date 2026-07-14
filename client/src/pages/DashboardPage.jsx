@@ -10,6 +10,7 @@ import {
 import useAuthStore from '../store/authStore';
 import useUserStore from '../store/userStore';
 import useAnimeStore from '../store/animeStore';
+import useSettingsStore from '../store/settingsStore';
 import AnimeCard from '../components/common/AnimeCard';
 import Modal from '../components/common/Modal';
 import Skeleton from '../components/common/Skeleton';
@@ -83,6 +84,7 @@ const item = {
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore();
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
   const {
     profile, watchlist, history, notifications, achievements,
     loadingProfile, loadingWatchlist, loadingHistory, loadingAchievements,
@@ -94,7 +96,14 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'home');
+  const visibleTabs = fetched && !premiumEnabled
+    ? TABS.filter(t => t.id !== 'premium')
+    : TABS;
+
+  const [activeTab, setActiveTab] = useState(() => {
+    const initialTab = searchParams.get('tab') || 'home';
+    return (fetched && !premiumEnabled && initialTab === 'premium') ? 'home' : initialTab;
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -110,6 +119,7 @@ export default function DashboardPage() {
     fetchNotifications();
     fetchAchievements();
     fetchTrending();
+    if (!fetched) fetchSettings();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -118,14 +128,14 @@ export default function DashboardPage() {
     return () => document.removeEventListener('click', handleClick);
   }, [mobileMenuOpen]);
 
-  const activeTabData = TABS.find((t) => t.id === activeTab);
+  const activeTabData = visibleTabs.find((t) => t.id === activeTab);
 
   return (
     <div className="min-h-screen bg-[#0f172a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-6">
           <div className="hidden md:flex items-center gap-1 p-1 bg-[#1e293b] rounded-xl border border-[rgba(148,163,184,0.12)]">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -151,7 +161,7 @@ export default function DashboardPage() {
               {mobileMenuOpen && (
                 <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                   className="absolute z-50 top-full left-0 right-0 mt-2 p-1 bg-[#1e293b] rounded-xl border border-[rgba(148,163,184,0.12)] shadow-xl">
-                  {TABS.map((tab) => {
+                  {visibleTabs.map((tab) => {
                     const Icon = tab.icon;
                     return (
                       <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
@@ -496,6 +506,21 @@ function HistoryTab({ history, loadingHistory, clearHistory }) {
 }
 
 function PremiumTab({ user, profile }) {
+  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
+  useEffect(() => { if (!fetched) fetchSettings(); }, []);
+
+  if (fetched && !premiumEnabled) {
+    return (
+      <div className="space-y-8">
+        <h2 className="text-2xl font-bold text-[#f8fafc]">Premium</h2>
+        <div className="bg-[#1e293b] rounded-2xl border border-[rgba(148,163,184,0.12)] p-6 text-center">
+          <Crown className="w-10 h-10 text-[#94a3b8] mx-auto mb-3 opacity-50" />
+          <p className="text-sm text-[#94a3b8]">Premium is currently disabled by the site administrator.</p>
+        </div>
+      </div>
+    );
+  }
+
   const isPremium = user?.isPremium || user?.premium || profile?.isPremium;
   const expiryDate = user?.premiumExpiry || profile?.premiumExpiry;
   const xpBalance = user?.xp || profile?.xp || 0;
