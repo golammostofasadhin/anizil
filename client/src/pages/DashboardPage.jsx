@@ -11,6 +11,7 @@ import useAuthStore from '../store/authStore';
 import useUserStore from '../store/userStore';
 import useAnimeStore from '../store/animeStore';
 import useSettingsStore from '../store/settingsStore';
+import useThemeStore from '../store/themeStore';
 import AnimeCard from '../components/common/AnimeCard';
 import Modal from '../components/common/Modal';
 import Skeleton from '../components/common/Skeleton';
@@ -634,7 +635,7 @@ function PremiumTab({ user, profile }) {
 
 function SettingsTab({ profile, user, fetchProfile }) {
   const [formData, setFormData] = useState({ name: '', avatar: '', bio: '', language: 'en' });
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const { theme, toggleTheme } = useThemeStore();
   const [password, setPassword] = useState({ current: '', new: '', confirm: '' });
   const [saving, setSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -691,10 +692,7 @@ function SettingsTab({ profile, user, fetchProfile }) {
   };
 
   const handleThemeToggle = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    toggleTheme();
   };
 
   return (

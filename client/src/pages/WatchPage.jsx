@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Play, MessageSquare, Info, Keyboard, List, C
 import useAnimeStore from '../store/animeStore';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
+import VideoPlayer from '../components/common/VideoPlayer';
 import Skeleton from '../components/common/Skeleton';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -13,8 +14,8 @@ export default function WatchPage() {
   const { animeSlug, episodeNumber } = useParams();
   const navigate = useNavigate();
   const { currentAnime, episodes, fetchAnimeBySlug, fetchEpisodes, loadingCurrentAnime } = useAnimeStore();
-  const { premiumEnabled, fetched, fetchSettings } = useSettingsStore();
-  const { isAuthenticated } = useAuthStore();
+  const { premiumEnabled, adsEnabled, adVideoUrl, vastTagUrl, adSkipSeconds, fetched, fetchSettings } = useSettingsStore();
+  const { user, isAuthenticated } = useAuthStore();
 
   const [server, setServer] = useState('sub');
   const [showSidebar, setShowSidebar] = useState(false);
@@ -190,6 +191,11 @@ export default function WatchPage() {
   const availableLanguages = [...new Set(episodeSources.map(s => s.language))];
   const currentSource = episodeSources.find(s => s.language === server) || episodeSources[0];
   const videoSrc = currentSource?.video_url || '';
+  const sourceType = /\.(m3u8)(\?|$)/i.test(videoSrc)
+    ? 'hls'
+    : /\.(mp4|webm|ogg)(\?|$)/i.test(videoSrc)
+      ? 'file'
+      : 'embed';
 
   // Auto-select first available server if current is not available
   useEffect(() => {
@@ -214,7 +220,7 @@ export default function WatchPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#f8fafc] mb-2">Anime not found</h2>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Anime not found</h2>
           <Link to="/" className="text-[#0ea5e9] hover:underline">Go Home</Link>
         </div>
       </div>
@@ -223,19 +229,23 @@ export default function WatchPage() {
 
   const isPremiumLocked = premiumEnabled && currentAnime.is_premium && !hasPremiumAccess;
 
+  // Free users see ads (unless ads disabled or user is premium subscriber)
+  const isUserPremium = user?.premium_until && new Date(user.premium_until) > new Date();
+  const showAds = adsEnabled && !isUserPremium && !isPremiumLocked;
+
   return (
-    <div className="min-h-screen bg-[#0f172a]">
+    <div className="min-h-screen bg-bg">
       {/* Video Player */}
       <div className="relative w-full bg-black">
         <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
           {isPremiumLocked ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#0f172a]">
+            <div className="absolute inset-0 flex items-center justify-center bg-bg">
               <div className="text-center px-4">
                 <div className="w-20 h-20 rounded-full bg-yellow-500/15 flex items-center justify-center mx-auto mb-4">
                   <Crown className="w-10 h-10 text-yellow-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#f8fafc] mb-2">Premium Anime</h2>
-                <p className="text-[#94a3b8] mb-6 max-w-md mx-auto">
+                <h2 className="text-2xl font-bold text-text-primary mb-2">Premium Anime</h2>
+                <p className="text-text-muted mb-6 max-w-md mx-auto">
                   This anime requires premium access. Unlock it for 200 XP or subscribe to premium.
                 </p>
                 <div className="flex items-center justify-center gap-3">
@@ -251,29 +261,30 @@ export default function WatchPage() {
                     )}
                   </button>
                   {!isAuthenticated && (
-                    <Link to="/login" className="px-6 py-3 bg-[#1e293b] text-[#f8fafc] rounded-lg font-medium border border-[rgba(148,163,184,0.12)] hover:bg-[#334155] transition-colors">
+                    <Link to="/login" className="px-6 py-3 bg-panel text-text-primary rounded-lg font-medium border border-border-custom hover:bg-panel-hover transition-colors">
                       Login
                     </Link>
                   )}
                 </div>
-                <Link to={`/anime/${animeSlug}`} className="inline-flex items-center gap-1 mt-4 text-sm text-[#94a3b8] hover:text-[#f8fafc] transition-colors">
+                <Link to={`/anime/${animeSlug}`} className="inline-flex items-center gap-1 mt-4 text-sm text-text-muted hover:text-text-primary transition-colors">
                   Back to details
                 </Link>
               </div>
             </div>
           ) : videoSrc ? (
-            <iframe
+            <VideoPlayer
               src={videoSrc}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              allow="autoplay; encrypted-media"
+              type={sourceType}
+              poster={currentAnime.poster}
               title={`${currentAnime.title} - Episode ${epNum}`}
+              showAds={showAds}
+              adConfig={{ videoUrl: adVideoUrl, vastTagUrl, skipSeconds: adSkipSeconds }}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#0f172a]">
+            <div className="absolute inset-0 flex items-center justify-center bg-bg">
               <div className="text-center">
-                <Play className="w-16 h-16 text-[#94a3b8] mx-auto mb-4" />
-                <p className="text-[#94a3b8] text-lg">Video not available</p>
+                <Play className="w-16 h-16 text-text-muted mx-auto mb-4" />
+                <p className="text-text-muted text-lg">Video not available</p>
                 <p className="text-[#64748b] text-sm mt-2">No sources found for this episode</p>
               </div>
             </div>
@@ -285,21 +296,21 @@ export default function WatchPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-[#1e293b] border border-[rgba(148,163,184,0.12)] rounded-lg p-4 shadow-xl z-20"
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-panel border border-border-custom rounded-lg p-4 shadow-xl z-20"
           >
-            <h4 className="text-[#f8fafc] text-sm font-semibold mb-2">Keyboard Shortcuts</h4>
+            <h4 className="text-text-primary text-sm font-semibold mb-2">Keyboard Shortcuts</h4>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between gap-6">
-                <span className="text-[#94a3b8]">Previous Episode</span>
-                <kbd className="bg-[#0f172a] px-1.5 py-0.5 rounded text-[#f8fafc]">←</kbd>
+                <span className="text-text-muted">Previous Episode</span>
+                <kbd className="bg-bg px-1.5 py-0.5 rounded text-text-primary">←</kbd>
               </div>
               <div className="flex justify-between gap-6">
-                <span className="text-[#94a3b8]">Next Episode</span>
-                <kbd className="bg-[#0f172a] px-1.5 py-0.5 rounded text-[#f8fafc]">→</kbd>
+                <span className="text-text-muted">Next Episode</span>
+                <kbd className="bg-bg px-1.5 py-0.5 rounded text-text-primary">→</kbd>
               </div>
               <div className="flex justify-between gap-6">
-                <span className="text-[#94a3b8]">Fullscreen</span>
-                <kbd className="bg-[#0f172a] px-1.5 py-0.5 rounded text-[#f8fafc]">F</kbd>
+                <span className="text-text-muted">Fullscreen</span>
+                <kbd className="bg-bg px-1.5 py-0.5 rounded text-text-primary">F</kbd>
               </div>
             </div>
           </motion.div>
@@ -308,7 +319,7 @@ export default function WatchPage() {
         {/* Server Switcher */}
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[#94a3b8] text-sm mr-2">Server:</span>
+            <span className="text-text-muted text-sm mr-2">Server:</span>
             {availableLanguages.length > 0 ? availableLanguages.map(lang => (
               <button
                 key={lang}
@@ -316,8 +327,8 @@ export default function WatchPage() {
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   server === lang
                     ? 'bg-[#0ea5e9] text-white'
-                    : 'bg-[#1e293b] text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc]'
-                } border border-[rgba(148,163,184,0.12)]`}
+                    : 'bg-panel text-text-muted hover:bg-panel-hover hover:text-text-primary'
+                } border border-border-custom`}
               >
                 {lang.toUpperCase()}
               </button>
@@ -328,7 +339,7 @@ export default function WatchPage() {
             )}
             <button
               onClick={() => setShowShortcuts(s => !s)}
-              className="p-1.5 rounded-lg bg-[#1e293b] text-[#94a3b8] hover:bg-[#334155] border border-[rgba(148,163,184,0.12)]"
+              className="p-1.5 rounded-lg bg-panel text-text-muted hover:bg-panel-hover border border-border-custom"
               title="Keyboard Shortcuts"
             >
               <Keyboard className="w-4 h-4" />
@@ -346,24 +357,24 @@ export default function WatchPage() {
               <button
                 onClick={goPrev}
                 disabled={epNum <= 1}
-                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#1e293b] text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc] disabled:opacity-30 disabled:cursor-not-allowed transition-colors border border-[rgba(148,163,184,0.12)]"
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-panel text-text-muted hover:bg-panel-hover hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors border border-border-custom"
               >
                 <ChevronLeft className="w-4 h-4" /> Prev
               </button>
-              <span className="text-[#f8fafc] font-semibold">
+              <span className="text-text-primary font-semibold">
                 Episode {epNum} of {episodes.length || '?'}
               </span>
               <button
                 onClick={goNext}
                 disabled={epNum >= episodes.length}
-                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[#1e293b] text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc] disabled:opacity-30 disabled:cursor-not-allowed transition-colors border border-[rgba(148,163,184,0.12)]"
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-panel text-text-muted hover:bg-panel-hover hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors border border-border-custom"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
             {/* Anime Info */}
-            <div className="bg-[#1e293b] rounded-xl border border-[rgba(148,163,184,0.12)] p-4 mb-6">
+            <div className="bg-panel rounded-xl border border-border-custom p-4 mb-6">
               <div className="flex items-start gap-4">
                 <img
                   src={currentAnime.poster}
@@ -371,8 +382,8 @@ export default function WatchPage() {
                   className="w-20 h-28 object-cover rounded-lg flex-shrink-0"
                 />
                 <div>
-                  <h1 className="text-xl font-bold text-[#f8fafc] mb-1">{currentAnime.title}</h1>
-                  <p className="text-[#94a3b8] text-sm line-clamp-2">{currentAnime.description}</p>
+                  <h1 className="text-xl font-bold text-text-primary mb-1">{currentAnime.title}</h1>
+                  <p className="text-text-muted text-sm line-clamp-2">{currentAnime.description}</p>
                 </div>
               </div>
             </div>
@@ -382,13 +393,13 @@ export default function WatchPage() {
           <div className="lg:w-80">
             <button
               onClick={() => setShowSidebar(!showSidebar)}
-              className="lg:hidden w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#1e293b] text-[#f8fafc] mb-4 border border-[rgba(148,163,184,0.12)]"
+              className="lg:hidden w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-panel text-text-primary mb-4 border border-border-custom"
             >
               <List className="w-4 h-4" /> Episode List
             </button>
 
             <div className={`${showSidebar ? 'block' : 'hidden'} lg:block`}>
-              <h3 className="text-lg font-semibold text-[#f8fafc] mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-text-primary mb-3 flex items-center gap-2">
                 <List className="w-5 h-5 text-[#0ea5e9]" /> Episodes
               </h3>
               <div className="space-y-1 max-h-[500px] overflow-y-auto pr-1">
@@ -402,11 +413,11 @@ export default function WatchPage() {
                       className={`flex items-center gap-3 p-2.5 rounded-lg text-sm transition-colors ${
                         isActive
                           ? 'bg-[#0ea5e9]/15 text-[#0ea5e9] border border-[#0ea5e9]/30'
-                          : 'text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc] border border-transparent'
+                          : 'text-text-muted hover:bg-panel-hover hover:text-text-primary border border-transparent'
                       }`}
                     >
                       <span className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
-                        isActive ? 'bg-[#0ea5e9] text-white' : 'bg-[#0f172a] text-[#94a3b8]'
+                        isActive ? 'bg-[#0ea5e9] text-white' : 'bg-bg text-text-muted'
                       }`}>
                         {ep.episode_number}
                       </span>
@@ -416,7 +427,7 @@ export default function WatchPage() {
                   );
                 })}
                 {episodes.length === 0 && (
-                  <p className="text-[#94a3b8] text-sm text-center py-4">No episodes available</p>
+                  <p className="text-text-muted text-sm text-center py-4">No episodes available</p>
                 )}
               </div>
             </div>

@@ -76,7 +76,7 @@ export default function Navbar() {
 
   const linkClass = ({ isActive }) =>
     `relative text-sm font-medium transition-colors duration-200 ${
-      isActive ? 'text-[#0ea5e9]' : 'text-[#94a3b8] hover:text-[#f8fafc]'
+      isActive ? 'text-primary' : 'text-text-muted hover:text-text-primary'
     }`;
 
   return (
@@ -90,14 +90,14 @@ export default function Navbar() {
           {/* Left: Logo + Mobile toggle */}
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden p-2 rounded-lg hover:bg-[#1e293b] transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-panel transition-colors"
               onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
             >
-              <Menu className="w-5 h-5 text-[#f8fafc]" />
+              <Menu className="w-5 h-5 text-text-primary" />
             </button>
             <Link to="/" className="flex items-center gap-1 select-none">
-              <span className="text-xl font-bold bg-gradient-to-r from-[#0ea5e9] to-[#38bdf8] bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
                 Anizil
               </span>
             </Link>
@@ -113,7 +113,7 @@ export default function Navbar() {
                     {isActive && (
                       <motion.span
                         layoutId="nav-underline"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#0ea5e9] rounded-full"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -127,17 +127,17 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               to="/search"
-              className="p-2 rounded-lg hover:bg-[#1e293b] transition-colors"
+              className="p-2 rounded-lg hover:bg-panel transition-colors"
               aria-label="Search"
             >
-              <Search className="w-5 h-5 text-[#94a3b8]" />
+              <Search className="w-5 h-5 text-text-muted" />
             </Link>
 
             {isLoggedIn ? (
               <div ref={userRef} className="relative">
                 <button
                   onClick={() => setUserOpen(!userOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[#1e293b] transition-colors"
+                  className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-panel transition-colors"
                 >
                   <div className="relative">
                     <img
@@ -160,11 +160,11 @@ export default function Navbar() {
                       </span>
                     )}
                   </div>
-                  <span className="hidden sm:block text-sm text-[#f8fafc] max-w-[100px] truncate">
+                  <span className="hidden sm:block text-sm text-text-primary max-w-[100px] truncate">
                     {user?.name || 'User'}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#94a3b8] transition-transform duration-200 ${
+                    className={`w-4 h-4 text-text-muted transition-transform duration-200 ${
                       userOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -176,15 +176,15 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-52 glass-strong rounded-xl border border-[rgba(148,163,184,0.12)] shadow-xl overflow-hidden"
+                      className="absolute right-0 top-full mt-2 w-52 glass-strong rounded-xl border border-border-custom shadow-xl overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-[rgba(148,163,184,0.12)]">
-                        <p className="text-sm font-medium text-[#f8fafc] truncate">
+                      <div className="px-4 py-3 border-b border-border-custom">
+                        <p className="text-sm font-medium text-text-primary truncate">
                           {user?.name}
                         </p>
-                        <p className="text-xs text-[#94a3b8] truncate">{user?.email}</p>
+                        <p className="text-xs text-text-muted truncate">{user?.email}</p>
                         {isAdmin && (
-                          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs bg-[#0ea5e9]/15 text-[#0ea5e9] font-medium">
+                          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs bg-primary/15 text-primary font-medium">
                             <Shield className="w-3 h-3" />
                             {user.role === 'super_admin' ? 'Super Admin' : user.role === 'content_admin' ? 'Content Admin' : 'Moderator'}
                           </span>
@@ -213,15 +213,15 @@ export default function Navbar() {
                         />
                         {isAdmin && (
                           <DropdownLink
-                            icon={<Crown className="w-4 h-4 text-[#facc15]" />}
+                            icon={<Crown className="w-4 h-4 text-warning" />}
                             label="Admin Panel"
                             onClick={() => { navigate('/admin'); setUserOpen(false); }}
                           />
                         )}
                       </div>
-                      <div className="border-t border-[rgba(148,163,184,0.12)] py-1">
+                      <div className="border-t border-border-custom py-1">
                         <DropdownLink
-                          icon={<LogOut className="w-4 h-4 text-[#ef4444]" />}
+                          icon={<LogOut className="w-4 h-4 text-danger" />}
                           label="Logout"
                           danger
                           onClick={handleLogout}
@@ -261,21 +261,21 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 bottom-0 w-72 bg-[#1e293b] border-r border-[rgba(148,163,184,0.12)] z-[70] flex flex-col"
+              className="fixed top-0 left-0 bottom-0 w-72 bg-panel border-r border-border-custom z-[70] flex flex-col"
             >
-              <div className="flex items-center justify-between px-4 h-16 border-b border-[rgba(148,163,184,0.12)]">
+              <div className="flex items-center justify-between px-4 h-16 border-b border-border-custom">
                 <Link
                   to="/"
-                  className="text-xl font-bold bg-gradient-to-r from-[#0ea5e9] to-[#38bdf8] bg-clip-text text-transparent"
+                  className="text-xl font-bold bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent"
                   onClick={() => setMobileOpen(false)}
                 >
                   Anizil
                 </Link>
                 <button
-                  className="p-2 rounded-lg hover:bg-[#334155] transition-colors"
+                  className="p-2 rounded-lg hover:bg-panel-hover transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  <X className="w-5 h-5 text-[#f8fafc]" />
+                  <X className="w-5 h-5 text-text-primary" />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto py-4 px-3">
@@ -288,8 +288,8 @@ export default function Navbar() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                           isActive
-                            ? 'bg-[#0ea5e9]/10 text-[#0ea5e9]'
-                            : 'text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc]'
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-text-muted hover:bg-panel-hover hover:text-text-primary'
                         }`
                       }
                     >
@@ -297,12 +297,12 @@ export default function Navbar() {
                     </NavLink>
                   ))}
                 </div>
-                <div className="mt-6 border-t border-[rgba(148,163,184,0.12)] pt-4">
+                <div className="mt-6 border-t border-border-custom pt-4">
                   {isLoggedIn ? (
                     <div className="flex flex-col gap-1">
                       <div className="px-3 py-2 mb-2">
-                        <p className="text-sm font-medium text-[#f8fafc]">{user?.name}</p>
-                        <p className="text-xs text-[#94a3b8]">{user?.email}</p>
+                        <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+                        <p className="text-xs text-text-muted">{user?.email}</p>
                       </div>
                       <DropdownLink
                         icon={<LayoutDashboard className="w-4 h-4" />}
@@ -316,13 +316,13 @@ export default function Navbar() {
                       />
                       {isAdmin && (
                         <DropdownLink
-                          icon={<Crown className="w-4 h-4 text-[#facc15]" />}
+                          icon={<Crown className="w-4 h-4 text-warning" />}
                           label="Admin Panel"
                           onClick={() => { navigate('/admin'); setMobileOpen(false); }}
                         />
                       )}
                       <button
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors mt-2"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-danger hover:bg-danger/10 transition-colors mt-2"
                         onClick={handleLogout}
                       >
                         <LogOut className="w-4 h-4" />
@@ -363,8 +363,8 @@ function DropdownLink({ icon, label, onClick, danger }) {
       onClick={onClick}
       className={`flex items-center gap-3 w-full px-4 py-2 text-sm transition-colors text-left ${
         danger
-          ? 'text-[#ef4444] hover:bg-[#ef4444]/10'
-          : 'text-[#94a3b8] hover:bg-[#334155] hover:text-[#f8fafc]'
+          ? 'text-danger hover:bg-danger/10'
+          : 'text-text-muted hover:bg-panel-hover hover:text-text-primary'
       }`}
     >
       {icon}

@@ -191,8 +191,8 @@ export default function AnimeDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#f8fafc] mb-2">Anime not found</h2>
-          <p className="text-[#94a3b8] mb-4">This anime might not be imported yet.</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Anime not found</h2>
+          <p className="text-text-muted mb-4">This anime might not be imported yet.</p>
           <Link to="/" className="text-[#0ea5e9] hover:underline">Go Home</Link>
         </div>
       </div>
@@ -222,11 +222,11 @@ export default function AnimeDetailPage() {
         <motion.nav
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center gap-2 text-sm text-[#94a3b8] mb-6"
+          className="flex items-center gap-2 text-sm text-text-muted mb-6"
         >
-          <Link to="/" className="hover:text-[#0ea5e9] transition-colors">Home</Link>
+          <Link to="/" className="hover:text-primary transition-colors">Home</Link>
           <ChevronRight className="w-3 h-3" />
-          <span className="text-[#f8fafc]">{anime.title}</span>
+          <span className="text-text-primary">{anime.title}</span>
         </motion.nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
@@ -243,7 +243,7 @@ export default function AnimeDetailPage() {
                 className="w-48 sm:w-56 flex-shrink-0 rounded-xl shadow-2xl mx-auto sm:mx-0 object-cover aspect-[3/4]"
               />
               <motion.div variants={fadeIn} className="flex-1 space-y-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-[#f8fafc]">{anime.title}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-text-primary">{anime.title}</h1>
 
                 <div className="flex flex-wrap items-center gap-3">
                   <span className={cn('px-3 py-1 rounded-full text-sm font-medium border', getStatusColor(anime.status))}>
@@ -259,12 +259,12 @@ export default function AnimeDetailPage() {
                     </span>
                   )}
                   {anime.release_year && (
-                    <span className="text-[#94a3b8] text-sm flex items-center gap-1">
+                    <span className="text-text-muted text-sm flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" /> {anime.release_year}
                     </span>
                   )}
                   {anime.episode_count > 0 && (
-                    <span className="text-[#94a3b8] text-sm">{anime.episode_count} Episodes</span>
+                    <span className="text-text-muted text-sm">{anime.episode_count} Episodes</span>
                   )}
                   {(anime.rating || anime.mal_score) > 0 && (
                     <span className="flex items-center gap-1 text-yellow-400 text-sm">
@@ -279,7 +279,7 @@ export default function AnimeDetailPage() {
                   ))}
                 </div>
 
-                <p className="text-[#94a3b8] leading-relaxed text-sm">
+                <p className="text-text-muted leading-relaxed text-sm">
                   {anime.description || anime.synopsis || 'No description available.'}
                 </p>
               </motion.div>
@@ -288,15 +288,15 @@ export default function AnimeDetailPage() {
             {/* Episodes Section */}
             <motion.section variants={fadeIn} className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-[#f8fafc]">
-                  Episodes {episodes.length > 0 && <span className="text-[#94a3b8] text-sm font-normal">({episodes.length})</span>}
+                <h2 className="text-xl font-bold text-text-primary">
+                  Episodes {episodes.length > 0 && <span className="text-text-muted text-sm font-normal">({episodes.length})</span>}
                 </h2>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setEpisodeView('grid')}
                     className={cn(
-                      'p-2 rounded-lg transition-colors border border-[rgba(148,163,184,0.12)]',
-                      episodeView === 'grid' ? 'bg-[#0ea5e9] text-white' : 'bg-[#1e293b] text-[#94a3b8] hover:text-[#f8fafc]'
+                      'p-2 rounded-lg transition-colors border border-border-custom',
+                      episodeView === 'grid' ? 'bg-primary text-white' : 'bg-panel text-text-muted hover:text-text-primary'
                     )}
                   >
                     <Grid3X3 className="w-4 h-4" />
@@ -304,8 +304,8 @@ export default function AnimeDetailPage() {
                   <button
                     onClick={() => setEpisodeView('list')}
                     className={cn(
-                      'p-2 rounded-lg transition-colors border border-[rgba(148,163,184,0.12)]',
-                      episodeView === 'list' ? 'bg-[#0ea5e9] text-white' : 'bg-[#1e293b] text-[#94a3b8] hover:text-[#f8fafc]'
+                      'p-2 rounded-lg transition-colors border border-border-custom',
+                      episodeView === 'list' ? 'bg-primary text-white' : 'bg-panel text-text-muted hover:text-text-primary'
                     )}
                   >
                     <List className="w-4 h-4" />
@@ -321,12 +321,12 @@ export default function AnimeDetailPage() {
                 </div>
               ) : episodes.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-[#94a3b8] mb-4">No episodes available yet</p>
+                  <p className="text-text-muted mb-4">No episodes available yet</p>
                   {anime.ani_id && (
                     <button
                       onClick={handleImport}
                       disabled={importing}
-                      className="inline-flex items-center gap-2 px-6 py-2 bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
                       {importing ? (
                         <><Loader2 className="w-4 h-4 animate-spin" /> Importing...</>
@@ -348,13 +348,13 @@ export default function AnimeDetailPage() {
                         className={cn(
                           'relative p-3 rounded-lg border text-center font-medium transition-all group',
                           locked
-                            ? 'bg-[#1e293b] border-[rgba(148,163,184,0.12)] text-[#94a3b8] cursor-not-allowed'
-                            : 'bg-[#1e293b] border-[rgba(148,163,184,0.12)] hover:bg-[#334155] hover:border-[#0ea5e9]/50 text-[#f8fafc]'
+                            ? 'bg-panel border-border-custom text-text-muted cursor-not-allowed'
+                            : 'bg-panel border-border-custom hover:bg-panel-hover hover:border-[#0ea5e9]/50 text-text-primary'
                         )}
                       >
-                        {locked && <Lock className="absolute top-2 right-2 w-3 h-3 text-[#94a3b8]" />}
+                        {locked && <Lock className="absolute top-2 right-2 w-3 h-3 text-text-muted" />}
                         <span className="text-sm">EP {epNum}</span>
-                        {ep.title && <p className="text-xs text-[#94a3b8] mt-1 truncate">{ep.title}</p>}
+                        {ep.title && <p className="text-xs text-text-muted mt-1 truncate">{ep.title}</p>}
                       </Link>
                     );
                   })}
@@ -371,22 +371,22 @@ export default function AnimeDetailPage() {
                         className={cn(
                           'flex items-center gap-4 p-3 rounded-lg border transition-all',
                           locked
-                            ? 'bg-[#1e293b] border-[rgba(148,163,184,0.12)] cursor-not-allowed'
-                            : 'bg-[#1e293b] border-[rgba(148,163,184,0.12)] hover:bg-[#334155] hover:border-[#0ea5e9]/50'
+                            ? 'bg-panel border-border-custom cursor-not-allowed'
+                            : 'bg-panel border-border-custom hover:bg-panel-hover hover:border-[#0ea5e9]/50'
                         )}
                       >
-                        <div className="w-8 h-8 rounded bg-[#0f172a] flex items-center justify-center text-sm text-[#94a3b8] font-medium">
+                        <div className="w-8 h-8 rounded bg-bg flex items-center justify-center text-sm text-text-muted font-medium">
                           {epNum}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[#f8fafc] text-sm font-medium truncate">
+                          <p className="text-text-primary text-sm font-medium truncate">
                             {ep.title || `Episode ${epNum}`}
                           </p>
                         </div>
                         {locked ? (
-                          <Lock className="w-4 h-4 text-[#94a3b8]" />
+                          <Lock className="w-4 h-4 text-text-muted" />
                         ) : (
-                          <Play className="w-4 h-4 text-[#94a3b8] group-hover:text-[#0ea5e9]" />
+                          <Play className="w-4 h-4 text-text-muted group-hover:text-primary" />
                         )}
                       </Link>
                     );
@@ -401,10 +401,10 @@ export default function AnimeDetailPage() {
                       key={i}
                       onClick={() => setEpisodePage(i + 1)}
                       className={cn(
-                        'w-8 h-8 rounded-lg text-sm font-medium transition-colors border border-[rgba(148,163,184,0.12)]',
+                        'w-8 h-8 rounded-lg text-sm font-medium transition-colors border border-border-custom',
                         episodePage === i + 1
-                          ? 'bg-[#0ea5e9] text-white'
-                          : 'bg-[#1e293b] text-[#94a3b8] hover:text-[#f8fafc] hover:bg-[#334155]'
+                          ? 'bg-primary text-white'
+                          : 'bg-panel text-text-muted hover:text-text-primary hover:bg-panel-hover'
                       )}
                     >
                       {i + 1}
@@ -416,7 +416,7 @@ export default function AnimeDetailPage() {
 
             {/* Comments */}
             <motion.section variants={fadeIn}>
-              <h2 className="text-xl font-bold text-[#f8fafc] mb-4">Comments</h2>
+              <h2 className="text-xl font-bold text-text-primary mb-4">Comments</h2>
 
               {isAuthenticated ? (
                 <form onSubmit={handleSubmitComment} className="flex gap-3 mb-6">
@@ -425,28 +425,28 @@ export default function AnimeDetailPage() {
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write a comment..."
-                    className="flex-1 bg-[#1e293b] border border-[rgba(148,163,184,0.12)] rounded-lg px-4 py-2.5 text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:border-[#0ea5e9]/50 text-sm"
+                    className="flex-1 bg-panel border border-border-custom rounded-lg px-4 py-2.5 text-text-primary placeholder-[#94a3b8] focus:outline-none focus:border-[#0ea5e9]/50 text-sm"
                   />
                   <button
                     type="submit"
                     disabled={!commentText.trim() || commentLoading}
-                    className="px-4 py-2.5 bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white rounded-lg transition-colors disabled:opacity-50"
+                    className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </form>
               ) : (
-                <p className="text-[#94a3b8] text-sm mb-6">
+                <p className="text-text-muted text-sm mb-6">
                   <Link to="/login" className="text-[#0ea5e9] hover:underline">Login</Link> to comment
                 </p>
               )}
 
               <div className="space-y-4">
                 {comments.length === 0 && (
-                  <p className="text-[#94a3b8] text-center py-4">No comments yet. Be the first!</p>
+                  <p className="text-text-muted text-center py-4">No comments yet. Be the first!</p>
                 )}
                 {comments.map((comment) => (
-                  <div key={comment.id || comment._id} className="bg-[#1e293b] border border-[rgba(148,163,184,0.12)] rounded-lg p-4">
+                  <div key={comment.id || comment._id} className="bg-panel border border-border-custom rounded-lg p-4">
                     <div className="flex items-start gap-3">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden"
@@ -466,15 +466,15 @@ export default function AnimeDetailPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[#f8fafc] text-sm font-medium">{comment.user_name || 'Anonymous'}</span>
+                          <span className="text-text-primary text-sm font-medium">{comment.user_name || 'Anonymous'}</span>
                           {comment.frame_name && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${comment.frame_color}20`, color: comment.frame_color, border: `1px solid ${comment.frame_color}30` }}>
                               {comment.frame_name}
                             </span>
                           )}
-                          <span className="text-[#94a3b8] text-xs">{formatDate(comment.created_at || comment.createdAt)}</span>
+                          <span className="text-text-muted text-xs">{formatDate(comment.created_at || comment.createdAt)}</span>
                         </div>
-                        <p className="text-[#94a3b8] text-sm">{comment.content || comment.text}</p>
+                        <p className="text-text-muted text-sm">{comment.content || comment.text}</p>
                       </div>
                     </div>
                   </div>
@@ -490,7 +490,7 @@ export default function AnimeDetailPage() {
             variants={{ show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } }}
             className="space-y-4"
           >
-            <motion.div variants={fadeIn} className="bg-[#1e293b] border border-[rgba(148,163,184,0.12)] rounded-xl p-5 space-y-4 sticky top-24">
+            <motion.div variants={fadeIn} className="bg-panel border border-border-custom rounded-xl p-5 space-y-4 sticky top-24">
               {anime.is_premium && premiumEnabled && !hasPremiumAccess ? (
                 <button
                   onClick={handlePurchaseAnime}
@@ -506,7 +506,7 @@ export default function AnimeDetailPage() {
               ) : (
                 <Link
                   to={`/watch/${slug}/1`}
-                  className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#0ea5e9] to-[#0ea5e9]/80 hover:from-[#0ea5e9]/90 hover:to-[#0ea5e9]/70 text-white py-3 rounded-lg font-semibold transition-all shadow-lg shadow-[#0ea5e9]/25"
+                  className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-[#0ea5e9]/70 text-white py-3 rounded-lg font-semibold transition-all shadow-lg shadow-[#0ea5e9]/25"
                 >
                   <Play className="w-5 h-5" /> Watch Now
                 </Link>
@@ -516,7 +516,7 @@ export default function AnimeDetailPage() {
                 <button
                   onClick={handleImport}
                   disabled={importing}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium bg-[#0ea5e9] hover:bg-[#0284c7] text-white transition-colors"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium bg-primary hover:bg-primary-hover text-white transition-colors"
                 >
                   {importing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
                   {importing ? 'Importing...' : 'Import to Database'}
@@ -527,8 +527,8 @@ export default function AnimeDetailPage() {
               <button
                 onClick={handleAddToWatchlist}
                 className={cn(
-                  'flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all border border-[rgba(148,163,184,0.12)]',
-                  watchlisted ? 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/30' : 'bg-[#1e293b] hover:bg-[#334155] text-[#f8fafc]'
+                  'flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium transition-all border border-border-custom',
+                  watchlisted ? 'bg-danger/10 text-danger border-danger/30' : 'bg-panel hover:bg-panel-hover text-text-primary'
                 )}
               >
                 <Heart className={cn('w-5 h-5', watchlisted && 'fill-current')} />
@@ -538,47 +538,47 @@ export default function AnimeDetailPage() {
 
               <button
                 onClick={handleShare}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium bg-[#1e293b] hover:bg-[#334155] text-[#f8fafc] transition-colors border border-[rgba(148,163,184,0.12)]"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium bg-panel hover:bg-panel-hover text-text-primary transition-colors border border-border-custom"
               >
                 <Share2 className="w-5 h-5" /> Share
               </button>
 
-              <div className="border-t border-[rgba(148,163,184,0.12)] pt-4 space-y-3">
-                <h3 className="text-sm font-semibold text-[#f8fafc]">Information</h3>
+              <div className="border-t border-border-custom pt-4 space-y-3">
+                <h3 className="text-sm font-semibold text-text-primary">Information</h3>
                 {anime.release_year && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Year</span>
-                    <span className="text-[#f8fafc]">{anime.release_year}</span>
+                    <span className="text-text-muted">Year</span>
+                    <span className="text-text-primary">{anime.release_year}</span>
                   </div>
                 )}
                 {anime.season && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Season</span>
-                    <span className="text-[#f8fafc]">{anime.season}</span>
+                    <span className="text-text-muted">Season</span>
+                    <span className="text-text-primary">{anime.season}</span>
                   </div>
                 )}
                 {anime.duration && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Duration</span>
-                    <span className="text-[#f8fafc]">{anime.duration}</span>
+                    <span className="text-text-muted">Duration</span>
+                    <span className="text-text-primary">{anime.duration}</span>
                   </div>
                 )}
                 {anime.language && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Language</span>
-                    <span className="text-[#f8fafc]">{anime.language}</span>
+                    <span className="text-text-muted">Language</span>
+                    <span className="text-text-primary">{anime.language}</span>
                   </div>
                 )}
                 {anime.studio && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Studio</span>
-                    <span className="text-[#f8fafc]">{anime.studio}</span>
+                    <span className="text-text-muted">Studio</span>
+                    <span className="text-text-primary">{anime.studio}</span>
                   </div>
                 )}
                 {anime.views > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-[#94a3b8]">Views</span>
-                    <span className="text-[#f8fafc]">{formatNumber(anime.views)}</span>
+                    <span className="text-text-muted">Views</span>
+                    <span className="text-text-primary">{formatNumber(anime.views)}</span>
                   </div>
                 )}
               </div>
@@ -595,7 +595,7 @@ export default function AnimeDetailPage() {
             variants={{ show: { transition: { staggerChildren: 0.05 } } }}
             className="mt-12 mb-16"
           >
-            <h2 className="text-xl font-bold text-[#f8fafc] mb-6">Related Anime</h2>
+            <h2 className="text-xl font-bold text-text-primary mb-6">Related Anime</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {relatedAnime.slice(0, 5).map((a, i) => (
                 <motion.div key={a.id || a.slug || i} variants={fadeIn}>

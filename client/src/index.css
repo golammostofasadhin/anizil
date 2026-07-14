@@ -1,20 +1,60 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #0ea5e9;
-  --color-primary-hover: #0284c7;
-  --color-primary-light: rgba(14, 165, 233, 0.12);
-  --color-bg-dark: #0f172a;
-  --color-panel: #1e293b;
-  --color-panel-hover: #334155;
-  --color-border-custom: rgba(148, 163, 184, 0.12);
-  --color-text-primary: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
-  --color-warning: #facc15;
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Theme tokens resolve to CSS variables so light/dark can swap them */
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-bg-dark: var(--bg);
+  --color-bg: var(--bg);
+  --color-surface: var(--panel-hover);
+  --color-panel: var(--panel);
+  --color-panel-hover: var(--panel-hover);
+  --color-border: var(--border);
+  --color-border-custom: var(--border);
+  --color-text-primary: var(--text);
+  --color-text: var(--text);
+  --color-text-muted: var(--muted);
+  --color-muted: var(--muted);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Outfit', system-ui, sans-serif;
+}
+
+/* Light theme (default) */
+:root {
+  --bg: #f1f5f9;
+  --panel: #ffffff;
+  --panel-hover: #e2e8f0;
+  --border: rgba(15, 23, 42, 0.10);
+  --text: #0f172a;
+  --muted: #475569;
+  --primary: #0ea5e9;
+  --primary-hover: #0284c7;
+  --primary-light: rgba(14, 165, 233, 0.12);
+  --danger: #ef4444;
+  --success: #16a34a;
+  --warning: #ca8a04;
+}
+
+/* Dark theme */
+.dark {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --panel-hover: #334155;
+  --border: rgba(148, 163, 184, 0.12);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --primary: #0ea5e9;
+  --primary-hover: #0284c7;
+  --primary-light: rgba(14, 165, 233, 0.12);
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #facc15;
 }
 
 @layer base {
@@ -24,12 +64,21 @@
     box-sizing: border-box;
   }
 
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     font-family: var(--font-sans);
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: var(--bg);
+    color: var(--text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::-webkit-scrollbar {
@@ -38,36 +87,36 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #1e293b;
+    background: var(--panel-hover);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: var(--muted);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: var(--primary);
   }
 }
 
 @layer components {
   .glass {
-    background: rgba(30, 41, 59, 0.7);
+    background: color-mix(in srgb, var(--panel) 70%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--border);
   }
 
   .glass-strong {
-    background: rgba(30, 41, 59, 0.85);
+    background: color-mix(in srgb, var(--panel) 85%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--border);
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: white;
     border-radius: 0.5rem;
     padding: 0.5rem 1.25rem;
@@ -78,14 +127,14 @@
   }
 
   .btn-primary:hover {
-    box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 40%, transparent);
     transform: translateY(-1px);
   }
 
   .btn-secondary {
-    background: #1e293b;
-    color: #f8fafc;
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
     padding: 0.5rem 1.25rem;
     font-weight: 500;
@@ -94,15 +143,15 @@
   }
 
   .btn-secondary:hover {
-    background: #334155;
+    background: var(--panel-hover);
   }
 
   .input-dark {
-    background: #0f172a;
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: var(--bg);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
     padding: 0.625rem 1rem;
-    color: #f8fafc;
+    color: var(--text);
     font-size: 0.875rem;
     transition: border-color 0.2s;
     outline: none;
@@ -110,17 +159,17 @@
   }
 
   .input-dark:focus {
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
   }
 
   .input-dark::placeholder {
-    color: #64748b;
+    color: var(--muted);
   }
 
   .card-anime {
-    background: #1e293b;
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: var(--panel);
+    border: 1px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
     transition: all 0.3s;
@@ -128,12 +177,12 @@
 
   .card-anime:hover {
     transform: scale(1.02);
-    border-color: rgba(14, 165, 233, 0.3);
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   }
 
   .skeleton {
-    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background: linear-gradient(90deg, var(--panel) 25%, var(--panel-hover) 50%, var(--panel) 75%);
     background-size: 200% 100%;
     animation: skeleton-pulse 1.5s infinite;
     border-radius: 8px;
@@ -154,23 +203,23 @@
   }
 
   .badge-primary {
-    background: rgba(14, 165, 233, 0.15);
-    color: #0ea5e9;
+    background: var(--primary-light);
+    color: var(--primary);
   }
 
   .badge-success {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    color: var(--success);
   }
 
   .badge-warning {
-    background: rgba(250, 204, 21, 0.15);
-    color: #facc15;
+    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    color: var(--warning);
   }
 
   .badge-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
   }
 
   .line-clamp-2 {
@@ -197,11 +246,43 @@
   }
 
   @keyframes frame-glow {
-    0%, 100% { filter: drop-shadow(0 0 8px var(--glow-color, #0ea5e9)) brightness(1); }
-    50% { filter: drop-shadow(0 0 16px var(--glow-color, #0ea5e9)) brightness(1.1); }
+    0%, 100% { filter: drop-shadow(0 0 8px var(--glow-color, var(--primary))) brightness(1); }
+    50% { filter: drop-shadow(0 0 16px var(--glow-color, var(--primary))) brightness(1.1); }
   }
 
   .frame-glow {
     animation: frame-glow 2s ease-in-out infinite;
   }
+}
+
+/*
+ * Theme compatibility layer: the codebase contains many hardcoded dark
+ * utility classes (e.g. bg-[#1e293b], text-[#f8fafc]). In light mode we
+ * remap the most common ones to the theme variables so the light/dark
+ * toggle works across every page without touching each file.
+ * (Dark mode keeps the hardcoded values, which equal the dark variables.)
+ */
+html:not(.dark) {
+  .bg-\[\#0f172a\] { background-color: var(--bg) !important; }
+  .bg-\[\#1e293b\] { background-color: var(--panel) !important; }
+  .bg-\[\#334155\] { background-color: var(--panel-hover) !important; }
+  .text-\[\#f8fafc\] { color: var(--text) !important; }
+  .text-\[\#94a3b8\] { color: var(--muted) !important; }
+  .text-\[\#0ea5e9\] { color: var(--primary) !important; }
+  .bg-\[\#0ea5e9\] { background-color: var(--primary) !important; }
+  .border-\[\#0ea5e9\] { border-color: var(--primary) !important; }
+  .bg-\[\#ef4444\] { background-color: var(--danger) !important; }
+  .text-\[\#ef4444\] { color: var(--danger) !important; }
+  .bg-\[\#22c55e\] { background-color: var(--success) !important; }
+  .text-\[\#22c55e\] { color: var(--success) !important; }
+  .bg-\[\#facc15\] { background-color: var(--warning) !important; }
+  .text-\[\#facc15\] { color: var(--warning) !important; }
+  .bg-\[\#a855f7\] { background-color: #a855f7 !important; }
+
+  .hover\:bg-\[\#334155\]:hover { background-color: var(--panel-hover) !important; }
+  .hover\:bg-\[\#0284c7\]:hover { background-color: var(--primary-hover) !important; }
+  .hover\:bg-\[\#1e293b\]:hover { background-color: var(--panel) !important; }
+  .hover\:text-\[\#f8fafc\]:hover { color: var(--text) !important; }
+  .hover\:text-\[\#94a3b8\]:hover { color: var(--muted) !important; }
+  .hover\:text-\[\#0ea5e9\]:hover { color: var(--primary) !important; }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Eye, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Save, Eye, Loader2, ToggleLeft, ToggleRight, Film, Skull } from 'lucide-react';
 import api from '../../lib/api';
 import { cn } from '../../lib/utils';
 
@@ -11,6 +11,10 @@ const defaultValues = {
   zoneBelowPlayer: '',
   zoneSidebar: '',
   zoneStickyBottom: '',
+  // VAST / video-player ad pre-roll
+  vastTagUrl: '',
+  videoUrl: '',
+  skipSeconds: 5,
 };
 
 export default function AdminAds() {
@@ -23,6 +27,8 @@ export default function AdminAds() {
   const zoneBelowPlayer = watch('zoneBelowPlayer');
   const zoneSidebar = watch('zoneSidebar');
   const zoneStickyBottom = watch('zoneStickyBottom');
+  const vastTagUrl = watch('vastTagUrl');
+  const videoUrl = watch('videoUrl');
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -36,6 +42,9 @@ export default function AdminAds() {
           zoneBelowPlayer: d.ad_zoneBelowPlayer || d.zoneBelowPlayer || '',
           zoneSidebar: d.ad_zoneSidebar || d.zoneSidebar || '',
           zoneStickyBottom: d.ad_zoneStickyBottom || d.zoneStickyBottom || '',
+          vastTagUrl: d.ad_vastTagUrl || d.vastTagUrl || '',
+          videoUrl: d.ad_videoUrl || d.videoUrl || '',
+          skipSeconds: parseInt(d.ad_skipSeconds || d.skipSeconds) || 5,
         });
       } catch (err) {
         console.error(err);
@@ -64,48 +73,48 @@ export default function AdminAds() {
     { name: 'zoneStickyBottom', label: 'Sticky Bottom', size: 'Full Width', value: zoneStickyBottom },
   ];
 
-  if (loading) return <div className="text-center py-12 text-[#94a3b8]">Loading settings...</div>;
+  if (loading) return <div className="text-center py-12 text-muted">Loading settings...</div>;
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-bold text-[#f8fafc]">HilltopAds Settings</h1>
+      <h1 className="text-2xl font-bold text-text-primary">HilltopAds Settings</h1>
 
       <form onSubmit={handleSubmit(onSave)} className="space-y-6">
-        <div className="bg-[#1e293b] rounded-xl border border-[rgba(148,163,184,0.12)] p-6">
+        <div className="bg-panel rounded-xl border border-border-custom p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-[#f8fafc]">HilltopAds</h2>
-              <p className="text-sm text-[#94a3b8]">Enable or disable ads across the site</p>
+              <h2 className="text-lg font-semibold text-text-primary">HilltopAds</h2>
+              <p className="text-sm text-muted">Enable or disable ads across the site</p>
             </div>
             <button
               type="button"
               onClick={() => setValue('enabled', !enabled)}
-              className={cn('transition-colors', enabled ? 'text-green-400' : 'text-[#94a3b8]')}
+              className={cn('transition-colors', enabled ? 'text-green-400' : 'text-muted')}
             >
               {enabled ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
             </button>
           </div>
 
           <div>
-            <label className="block text-sm text-[#94a3b8] mb-1">Publisher Tag ID</label>
+            <label className="block text-sm text-muted mb-1">Publisher Tag ID</label>
             <input {...register('publisherTagId')} className="input-dark" placeholder="Enter your HilltopAds publisher tag ID" />
           </div>
         </div>
 
-        <div className="bg-[#1e293b] rounded-xl border border-[rgba(148,163,184,0.12)] p-6">
-          <h2 className="text-lg font-semibold text-[#f8fafc] mb-4">Zone IDs</h2>
+        <div className="bg-panel rounded-xl border border-border-custom p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Zone IDs</h2>
           <div className="space-y-4">
             {zones.map((zone) => (
               <div key={zone.name} className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex-1">
-                  <label className="block text-sm text-[#f8fafc] mb-1">{zone.label} <span className="text-[#94a3b8]">({zone.size})</span></label>
+                  <label className="block text-sm text-text-primary mb-1">{zone.label} <span className="text-muted">({zone.size})</span></label>
                   <input {...register(zone.name)} className="input-dark" placeholder={`Zone ID for ${zone.label}`} />
                 </div>
                 {zone.value && (
                   <button
                     type="button"
                     onClick={() => window.open(`https://hilltopads.com/zone/${zone.value}`, '_blank')}
-                    className="self-end p-2 rounded-lg hover:bg-[#334155] text-[#94a3b8] hover:text-[#0ea5e9] transition-colors"
+                    className="self-end p-2 rounded-lg hover:bg-panel-hover text-muted hover:text-primary transition-colors"
                     title="Preview zone"
                   >
                     <Eye className="w-4 h-4" />
@@ -113,6 +122,42 @@ export default function AdminAds() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* VAST / Video Player Ad Pre-roll */}
+        <div className="bg-panel rounded-xl border border-border-custom p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Film className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-text-primary">Video Player Ads (VAST / Pre-roll)</h2>
+          </div>
+          <p className="text-sm text-muted mb-4">
+            Show an advertisement before the video plays. Free-tier users only — premium users stay ad-free.
+            Provide either a VAST tag URL or a direct video file.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-text-primary mb-1">VAST Tag URL</label>
+              <input {...register('vastTagUrl')} className="input-dark" placeholder="https://ads.example.com/vast.xml" />
+              <p className="text-xs text-muted mt-1">VAST XML is fetched and the MP4 media file is played as a pre-roll.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm text-text-primary mb-1">Direct Ad Video URL (MP4)</label>
+              <input {...register('videoUrl')} className="input-dark" placeholder="https://cdn.example.com/ad.mp4" />
+              <p className="text-xs text-muted mt-1">Used directly if no VAST tag is provided (most reliable).</p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="block text-sm text-text-primary mb-1">Skip after (seconds)</label>
+              <input
+                type="number"
+                min={0}
+                {...register('skipSeconds', { valueAsNumber: true })}
+                className="input-dark w-28"
+              />
+            </div>
           </div>
         </div>
 

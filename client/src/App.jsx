@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 import useAuthStore from './store/authStore';
+import useThemeStore from './store/themeStore';
 
 import Layout from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -96,9 +97,11 @@ function PublicRoute({ children }) {
 
 function App() {
   const { initialize } = useAuthStore();
+  const { initTheme } = useThemeStore();
 
   useEffect(() => {
     initialize();
+    initTheme();
   }, [initialize]);
 
   return (

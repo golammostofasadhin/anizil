@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Save, Loader2, Settings, Palette, ToggleLeft, ToggleRight, Megaphone, Crown, LogIn } from 'lucide-react';
 import api from '../../lib/api';
 import { cn } from '../../lib/utils';
+import useThemeStore from '../../store/themeStore';
 
 const tabs = [
   { key: 'general', label: 'General', icon: Settings },
@@ -167,7 +168,11 @@ export default function AdminSettings() {
           <h2 className="text-lg font-semibold text-[#f8fafc]">Theme Settings</h2>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#f8fafc]">Default Dark Mode</span>
-            <button type="button" onClick={() => themeForm.setValue('dark_mode', !themeForm.watch('dark_mode'))} className={themeForm.watch('dark_mode') ? 'text-green-400' : 'text-[#94a3b8]'}>
+            <button type="button" onClick={() => {
+              const next = !themeForm.watch('dark_mode');
+              themeForm.setValue('dark_mode', next);
+              useThemeStore.getState().setTheme(next ? 'dark' : 'light');
+            }} className={themeForm.watch('dark_mode') ? 'text-green-400' : 'text-[#94a3b8]'}>
               {themeForm.watch('dark_mode') ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8" />}
             </button>
           </div>
