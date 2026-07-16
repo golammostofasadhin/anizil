@@ -1,11 +1,12 @@
 const express = require('express');
-const pool = require('../config/database');
+const { getPool } = require('../config/database');
 const { paginate } = require('../utils/helpers');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
+    const pool = await getPool();
     const { q, page, limit } = req.query;
     const pagination = paginate(page, limit);
 

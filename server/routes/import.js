@@ -159,16 +159,16 @@ router.post('/anikoto', requirePermission('add_anime'), async (req, res) => {
       // Add SUB source
       if (ep.embed_url?.sub) {
         await pool.query(
-          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, source_type) VALUES (?, ?, ?, ?, ?)',
-          [epResult.insertId, 'sub', 'MegaPlay', ep.embed_url.sub, 'embed']
+          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, embed_link, source_type) VALUES (?, ?, ?, ?, ?, ?)',
+          [epResult.insertId, 'sub', 'MegaPlay', ep.embed_url.sub, null, 'embed']
         );
       }
 
       // Add DUB source
       if (ep.embed_url?.dub) {
         await pool.query(
-          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, source_type) VALUES (?, ?, ?, ?, ?)',
-          [epResult.insertId, 'dub', 'MegaPlay', ep.embed_url.dub, 'embed']
+          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, embed_link, source_type) VALUES (?, ?, ?, ?, ?, ?)',
+          [epResult.insertId, 'dub', 'MegaPlay', ep.embed_url.dub, null, 'embed']
         );
       }
     }

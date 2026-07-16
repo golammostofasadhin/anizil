@@ -338,16 +338,13 @@ router.post('/forgot-password', [
     const resetExpiry = new Date(Date.now() + 3600000);
 
     await pool.query(
-      'UPDATE users SET referral_code = ? WHERE id = ?',
-      [resetToken, users[0].id]
+      'UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?',
+      [resetToken, resetExpiry, users[0].id]
     );
 
     res.json({
       success: true,
-      message: 'If the email exists, a reset link has been sent',
-      data: {
-        reset_token: resetToken
-      }
+      message: 'If the email exists, a reset link has been sent'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -375,7 +372,10 @@ router.post('/reset-password', [
 
     const { token, password } = req.body;
 
-    const [users] = await pool.query('SELECT id FROM users WHERE referral_code = ?', [token]);
+    const [users] = await pool.query(
+      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()',
+      [token]
+    );
     if (users.length === 0) {
       return res.status(400).json({
         success: false,
@@ -386,7 +386,10 @@ router.post('/reset-password', [
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, users[0].id]);
+    await pool.query(
+      'UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?',
+      [hashedPassword, users[0].id]
+    );
 
     res.json({
       success: true,

@@ -323,6 +323,14 @@ router.get('/episodes', async (req, res) => {
       [...params, limit, offset]
     );
 
+    for (const ep of episodes) {
+      const [sources] = await pool.query(
+        'SELECT * FROM episode_sources WHERE episode_id = ? AND is_active = 1',
+        [ep.id]
+      );
+      ep.sources = sources;
+    }
+
     res.json({
       success: true,
       data: {
@@ -382,8 +390,8 @@ router.post('/episodes', requirePermission('manage_episodes'), [
     if (sources && Array.isArray(sources)) {
       for (const source of sources) {
         await pool.query(
-          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, source_type) VALUES (?, ?, ?, ?, ?)',
-          [result.insertId, source.language, source.server_name, source.video_url, source.source_type || 'embed']
+          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, embed_link, source_type) VALUES (?, ?, ?, ?, ?, ?)',
+          [result.insertId, source.language, source.server_name, source.video_url, source.embed_link || null, source.source_type || 'embed']
         );
       }
     }
@@ -444,8 +452,8 @@ router.put('/episodes/:id', requirePermission('manage_episodes'), async (req, re
       await pool.query('DELETE FROM episode_sources WHERE episode_id = ?', [id]);
       for (const source of updates.sources) {
         await pool.query(
-          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, source_type) VALUES (?, ?, ?, ?, ?)',
-          [id, source.language, source.server_name, source.video_url, source.source_type || 'embed']
+          'INSERT INTO episode_sources (episode_id, language, server_name, video_url, embed_link, source_type) VALUES (?, ?, ?, ?, ?, ?)',
+          [id, source.language, source.server_name, source.video_url, source.embed_link || null, source.source_type || 'embed']
         );
       }
     }
@@ -1285,15 +1293,18 @@ router.get('/stats', async (req, res) => {
     const [premiumUsers] = await pool.query('SELECT COUNT(*) as count FROM users WHERE premium_until > NOW()');
 
     res.json({
-      totalUsers: totalUsers[0].count,
-      totalAnime: totalAnime[0].count,
-      totalEpisodes: totalEpisodes[0].count,
-      totalViews: totalViews[0].count || 0,
-      newUsersToday: newUsersToday[0].count,
-      newAnimeThisWeek: newAnimeThisWeek[0].count,
-      pendingReports: pendingReports[0].count,
-      pendingComments: pendingComments[0].count,
-      premiumUsers: premiumUsers[0].count,
+      success: true,
+      data: {
+        totalUsers: totalUsers[0].count,
+        totalAnime: totalAnime[0].count,
+        totalEpisodes: totalEpisodes[0].count,
+        totalViews: totalViews[0].count || 0,
+        newUsersToday: newUsersToday[0].count,
+        newAnimeThisWeek: newAnimeThisWeek[0].count,
+        pendingReports: pendingReports[0].count,
+        pendingComments: pendingComments[0].count,
+        premiumUsers: premiumUsers[0].count,
+      }
     });
   } catch (error) {
     console.error('Admin stats error:', error);
@@ -1312,7 +1323,7 @@ router.get('/activities', async (req, res) => {
        ORDER BY af.created_at DESC LIMIT ?`,
       [limit]
     );
-    res.json({ success: true, activities });
+    res.json({ success: true, data: { activities } });
   } catch (error) {
     console.error('Admin activities error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

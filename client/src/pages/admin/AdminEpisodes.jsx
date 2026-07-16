@@ -25,7 +25,7 @@ export default function AdminEpisodes() {
   const [saving, setSaving] = useState(false);
 
   const epForm = useForm({ defaultValues: { episodeNumber: '', title: '', description: '', thumbnail: '' } });
-  const sourceForm = useForm({ defaultValues: { language: 'sub', server: 'MegaPlay', url: '', type: 'embed' } });
+  const sourceForm = useForm({ defaultValues: { language: 'sub', server: 'MegaPlay', url: '', embed_link: '', type: 'embed' } });
   const bulkForm = useForm({ defaultValues: { anilistId: '', count: '' } });
 
   const searchAnime = useCallback(async (query) => {
@@ -89,7 +89,13 @@ export default function AdminEpisodes() {
 
   const openSourceModal = (episode) => {
     setEditingEpisode(episode);
-    sourceForm.reset({ language: 'sub', server: 'MegaPlay', url: '', type: 'embed' });
+    sourceForm.reset({ 
+      language: 'sub', 
+      server: 'MegaPlay', 
+      url: '', 
+      embed_link: '', 
+      type: 'embed' 
+    });
     setShowSourceModal(true);
   };
 
@@ -104,6 +110,7 @@ export default function AdminEpisodes() {
           language: data.language,
           server_name: data.server,
           video_url: data.url,
+          embed_link: data.embed_link || null,
           source_type: data.type
         }]
       });
@@ -210,16 +217,16 @@ export default function AdminEpisodes() {
                         <thead>
                           <tr className="text-[#94a3b8]">
                             <th className="text-left py-1 font-medium">Lang</th>
-                            <th className="text-left py-1 font-medium">Server</th>
+                            <th className="text-left py-1 font-medium">Server/Embed</th>
                             <th className="text-left py-1 font-medium hidden md:table-cell">Type</th>
-                            <th className="text-left py-1 font-medium hidden lg:table-cell">URL</th>
+                            <th className="text-left py-1 font-medium hidden lg:table-cell">Video URL</th>
                           </tr>
                         </thead>
                         <tbody>
                           {sources.map((src) => (
                             <tr key={src.id || src._id} className="border-t border-[rgba(148,163,184,0.04)]">
                               <td className="py-1.5"><span className="px-2 py-0.5 rounded bg-[#0ea5e9]/15 text-[#0ea5e9] text-xs">{src.language}</span></td>
-                              <td className="py-1.5 text-[#f8fafc]">{src.server_name}</td>
+                              <td className="py-1.5 text-[#f8fafc]">{src.embed_link || src.server_name}</td>
                               <td className="py-1.5 text-[#94a3b8] hidden md:table-cell">{src.source_type}</td>
                               <td className="py-1.5 text-[#94a3b8] truncate max-w-[200px] hidden lg:table-cell">{src.video_url}</td>
                             </tr>
@@ -295,6 +302,10 @@ export default function AdminEpisodes() {
               <option value="embed">Embed (iframe)</option>
               <option value="url">Direct URL</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm text-[#94a3b8] mb-1">Embed Link (optional)</label>
+            <input {...sourceForm.register('embed_link')} className="w-full px-4 py-2.5 bg-[#0f172a] border border-[rgba(148,163,184,0.12)] rounded-lg text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:border-[#0ea5e9] transition-colors" placeholder="https://megaplay.buzz/embed/..." />
           </div>
           <div className="flex justify-end gap-3">
             <button type="button" onClick={() => setShowSourceModal(false)} className="px-4 py-2.5 bg-[#1e293b] hover:bg-[#334155] text-[#f8fafc] rounded-lg font-medium transition-colors border border-[rgba(148,163,184,0.12)]">Cancel</button>

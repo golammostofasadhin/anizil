@@ -4,6 +4,17 @@ const { paginate } = require('../utils/helpers');
 
 const router = express.Router();
 
+// Simple in-memory cache for external API calls
+const apiCache = new Map();
+function getCached(key, ttlMs = 300000) {
+  const entry = apiCache.get(key);
+  if (entry && Date.now() - entry.ts < ttlMs) return entry.data;
+  return null;
+}
+function setCache(key, data) {
+  apiCache.set(key, { data, ts: Date.now() });
+}
+
 router.get('/', async (req, res) => {
   try {
     const pool = await getPool();
@@ -248,8 +259,8 @@ router.get('/:slug', async (req, res) => {
                     episode_number: ep.number,
                     title: ep.title || `Episode ${ep.number}`,
                     sources: [
-                      ep.embed_url?.sub ? { language: 'sub', server_name: 'MegaPlay', video_url: ep.embed_url.sub, source_type: 'embed' } : null,
-                      ep.embed_url?.dub ? { language: 'dub', server_name: 'MegaPlay', video_url: ep.embed_url.dub, source_type: 'embed' } : null,
+                      ep.embed_url?.sub ? { language: 'sub', server_name: 'MegaPlay', video_url: ep.embed_url.sub, embed_link: null, source_type: 'embed' } : null,
+                      ep.embed_url?.dub ? { language: 'dub', server_name: 'MegaPlay', video_url: ep.embed_url.dub, embed_link: null, source_type: 'embed' } : null,
                     ].filter(Boolean),
                   })),
                   similar: [],
@@ -350,17 +361,6 @@ router.get('/:id/episodes', async (req, res) => {
     });
   }
 });
-
-// Simple in-memory cache for external API calls
-const apiCache = new Map();
-function getCached(key, ttlMs = 300000) {
-  const entry = apiCache.get(key);
-  if (entry && Date.now() - entry.ts < ttlMs) return entry.data;
-  return null;
-}
-function setCache(key, data) {
-  apiCache.set(key, { data, ts: Date.now() });
-}
 
 // Fetch recent anime from Anikoto API (external)
 router.get('/external/recent', async (req, res) => {

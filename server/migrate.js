@@ -3,7 +3,10 @@ require('dotenv').config();
 
 (async () => {
   const pool = mysql.createPool({
-    host: 'localhost', user: 'root', password: '', database: 'anizil'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'anizil'
   });
 
   const stmts = [
@@ -56,6 +59,20 @@ require('dotenv').config();
     console.log('Added google_id column');
   } catch (e) {
     console.log('google_id column already exists');
+  }
+
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) DEFAULT NULL');
+    console.log('Added reset_token column');
+  } catch (e) {
+    console.log('reset_token column already exists');
+  }
+
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN reset_token_expiry DATETIME DEFAULT NULL');
+    console.log('Added reset_token_expiry column');
+  } catch (e) {
+    console.log('reset_token_expiry column already exists');
   }
 
   try {

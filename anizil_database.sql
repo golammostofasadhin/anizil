@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS episode_sources (
   language VARCHAR(50) NOT NULL,
   server_name VARCHAR(100),
   video_url VARCHAR(1000),
+  embed_link VARCHAR(1000),
   source_type ENUM('embed','url') DEFAULT 'embed',
   is_active TINYINT(1) DEFAULT 1,
   FOREIGN KEY (episode_id) REFERENCES episodes(id) ON DELETE CASCADE
